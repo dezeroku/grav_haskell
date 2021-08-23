@@ -25,17 +25,17 @@ startState :: Grav
 startState = Grav 
     { moonLoc = (-10, 10)
     , moonDeg = 0
-    , moonRad = 15
+    , moonRad = 7
     , moonMass = 1000
 
     , planetLoc = (10, 10)
     , planetVel = (0,0)
-    , planetRad = 30
+    , planetRad = 22
     , planetMass = 10000000000
     
     , shipLoc = (100, 60)
     , shipVel = (0,0.2)
-    , shipRad = 5
+    , shipRad = 3
     , shipMass = 10000000
     }
 
