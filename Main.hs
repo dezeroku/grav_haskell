@@ -2,7 +2,10 @@ module Main where
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
-import Data.Fixed
+import Data.Fixed (mod')
+
+gravConstant :: Float
+gravConstant = 6.674 ** (-11)
 
 data Grav = Grav
     { moonLoc :: (Float, Float) 
@@ -50,27 +53,18 @@ render game =
     planetColor = dark green
     moonColor = light $ light blue
 
-window :: Display
-window = InWindow "Nice Window" (200, 200) (10, 10)
+move :: (Float, Float) -> (Float, Float) -> (Float, Float)
+move (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
 
-background :: Color
-background = black
+gravityForce :: Float -> Float -> Float -> Float
+gravityForce massOne massTwo radius = (gravConstant * massOne * massTwo) / (radius ^ 2)
 
-increase :: (Float, Float) -> (Float, Float) -> (Float, Float)
-increase a b = (fst a + fst b, snd a + snd b)
-
-gravity :: Float -> Float -> Float -> Float
-gravity massOne massTwo radius = (6.674 ** (-11)) * (massOne * massTwo) / (radius ^ 2)
-
-speed :: (Float, Float) -> (Float, Float) -> Float -> (Float, Float)
-speed first diffs spe = (firstRes, secondRes)
+calculateSpeed :: (Float, Float) -> (Float, Float) -> Float -> (Float, Float)
+calculateSpeed (xSpeed, ySpeed) (xDiff, yDiff) speed = (xSpeed + xDiffC, ySpeed + yDiffC)
                         where 
-                        przeciw = sqrt (fst diffs ^ 2 + snd diffs ^ 2)
-                        xDiff = spe * (fst diffs / przeciw)
-                        yDiff = spe * (snd diffs / przeciw)
-                        firstRes = fst first + xDiff
-                        secondRes = snd first + yDiff
-                          
+                        c = sqrt (xDiff ^ 2 + yDiff ^ 2)
+                        xDiffC = speed * (xDiff / c)
+                        yDiffC = speed * (yDiff / c)
 
 step :: ViewPort -> Float -> Grav -> Grav
 step _ _ game = game 
@@ -94,21 +88,25 @@ step _ _ game = game
         newMoonLoc = ((sin newMoonDeg * realMoonDistance) + pX, (cos newMoonDeg * realMoonDistance) + pY)
  
         -- Move stuff
-        newPlanetLoc = increase (planetLoc game) (planetVel game)
-        newShipLoc = increase (shipLoc game) (shipVel game)
+        newPlanetLoc = move (planetLoc game) (planetVel game)
+        newShipLoc = move (shipLoc game) (shipVel game)
 
         -- Calculate forces. TODO: it's really cheap here
         planetShipDistance = sqrt ((pX - sX) ^ 2 + (pY - sY) ^ 2)
-        force = gravity (planetMass game) (shipMass game) planetShipDistance
-        speedPlanet = force / (planetMass game)
-        speedShip = force / (shipMass game)
+        force = gravityForce (planetMass game) (shipMass game) planetShipDistance
+        speedPlanet = force / planetMass game
+        speedShip = force / shipMass game
 
         shipDiff = (pX - sX, pY - sY)
         planetDiff = (sX - pX, sY - pY)
-        newPlanetVel = speed (planetVel game) planetDiff speedPlanet
-        newShipVel = speed (shipVel game) shipDiff speedShip
-       
+        newPlanetVel = calculateSpeed (planetVel game) planetDiff speedPlanet
+        newShipVel = calculateSpeed (shipVel game) shipDiff speedShip
+
+window :: Display
+window = InWindow "Gravity..." (200, 200) (10, 10)
+
+background :: Color
+background = black
 
 main :: IO ()
---main = putStrLn "LOL"
 main = simulate window background 120 startState render step 
