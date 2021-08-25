@@ -4,7 +4,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Data.ViewPort
 import Data.Fixed (mod')
 
-data Grav = Grav
+data GravState = GravState
     { moonLoc :: (Float, Float) 
     , moonDeg :: Float
     , moonRad :: Float
@@ -24,8 +24,8 @@ data Grav = Grav
     , shipColor :: Color
 } deriving (Show)
 
-startState :: Grav
-startState = Grav 
+startState :: GravState
+startState = GravState
     { moonLoc = (-10, 10)
     , moonDeg = 0
     , moonRad = 7
@@ -45,7 +45,7 @@ startState = Grav
     , shipColor = red
     }
 
-render :: Grav -> Picture
+render :: GravState -> Picture
 render game = 
     pictures [planet, ship, moon]
     where
@@ -67,7 +67,7 @@ calculateSpeed (xSpeed, ySpeed) (xDiff, yDiff) speed = (xSpeed + xDiffC, ySpeed 
                         xDiffC = speed * (xDiff / c)
                         yDiffC = speed * (yDiff / c)
 
-step :: ViewPort -> Float -> Grav -> Grav
+step :: ViewPort -> Float -> GravState -> GravState
 step _ _ game = game 
     { moonDeg = newMoonDeg
     , moonLoc = newMoonLoc
